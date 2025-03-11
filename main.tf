@@ -46,7 +46,7 @@ resource "aws_efs_access_point" "aws_efs_access_point" {
     uid = 1000
   }
   root_directory {
-    path = "/videos"
+    path = "/path1"
     creation_info {
       owner_gid   = 1000
       owner_uid   = 1000
@@ -55,12 +55,14 @@ resource "aws_efs_access_point" "aws_efs_access_point" {
   }
 }
 
+
 ########################################################################################################################################################################################
 ########################################################################################################################################################################################
 ########################################################################################################################################################################################
-resource "aws_efs_file_system" "aws_efs_file_system_sonarqube" {
-  count          = var.environment == "dev" ? 1 : 0
-  creation_token = "${var.environment}-efs-sonarqube"
+#creation of app
+
+resource "aws_efs_file_system" "aws_efs_file_system_app2" {
+  creation_token = "${var.environment}-efs-app2"
   encrypted      = true
   lifecycle_policy {
     transition_to_ia = "AFTER_14_DAYS"
@@ -69,100 +71,27 @@ resource "aws_efs_file_system" "aws_efs_file_system_sonarqube" {
     transition_to_primary_storage_class = "AFTER_1_ACCESS"
   }
   tags = {
-    Name = "${var.environment}-efs-sonarqube"
+    Name = "${var.environment}-efs-app2"
   }
 }
 
-resource "aws_efs_mount_target" "aws_efs_mount_target_sonarqube" {
-  count           = var.environment == "dev" ? length(data.terraform_remote_state.vpc.outputs.db_subnets) : 0
-  file_system_id  = aws_efs_file_system.aws_efs_file_system_sonarqube[0].id
-  subnet_id       = data.terraform_remote_state.vpc.outputs.db_subnets[count.index]
-  security_groups = [aws_security_group.efs-sg.id]
-}
-
-resource "aws_efs_access_point" "aws_efs_access_point_sonarqube_data" {
-  count          = var.environment == "dev" ? 1 : 0
-  file_system_id = aws_efs_file_system.aws_efs_file_system_sonarqube[0].id
-  posix_user {
-    gid = 1000
-    uid = 1000
-  }
-  root_directory {
-    path = "/sonarqube-data"
-    creation_info {
-      owner_gid   = 1000
-      owner_uid   = 1000
-      permissions = "777"
-    }
-  }
-}
-
-resource "aws_efs_access_point" "aws_efs_access_point_sonarqube_logs" {
-  count          = var.environment == "dev" ? 1 : 0
-  file_system_id = aws_efs_file_system.aws_efs_file_system_sonarqube[0].id
-  posix_user {
-    gid = 1000
-    uid = 1000
-  }
-  root_directory {
-    path = "/sonarqube-logs"
-    creation_info {
-      owner_gid   = 1000
-      owner_uid   = 1000
-      permissions = "777"
-    }
-  }
-}
-
-resource "aws_efs_access_point" "aws_efs_access_point_sonarqube_extensions" {
-  count          = var.environment == "dev" ? 1 : 0
-  file_system_id = aws_efs_file_system.aws_efs_file_system_sonarqube[0].id
-  posix_user {
-    gid = 1000
-    uid = 1000
-  }
-  root_directory {
-    path = "/sonarqube-extensions"
-    creation_info {
-      owner_gid   = 1000
-      owner_uid   = 1000
-      permissions = "777"
-    }
-  }
-}
-
-########################################################################################################################################################################################
-########################################################################################################################################################################################
-########################################################################################################################################################################################
-resource "aws_efs_file_system" "aws_efs_file_system_pgadmin" {
-  creation_token = "${var.environment}-efs-pgadmin"
-  encrypted      = true
-  lifecycle_policy {
-    transition_to_ia = "AFTER_14_DAYS"
-  }
-  lifecycle_policy {
-    transition_to_primary_storage_class = "AFTER_1_ACCESS"
-  }
-  tags = {
-    Name = "${var.environment}-efs-pgadmin"
-  }
-}
-
-resource "aws_efs_mount_target" "aws_efs_mount_target_pgadmin" {
+#mount app
+resource "aws_efs_mount_target" "aws_efs_mount_target_app2" {
   count           = length(data.terraform_remote_state.vpc.outputs.db_subnets)
-  file_system_id  = aws_efs_file_system.aws_efs_file_system_pgadmin.id
+  file_system_id  = aws_efs_file_system.aws_efs_file_system_app2.id
   subnet_id       = data.terraform_remote_state.vpc.outputs.db_subnets[count.index]
   security_groups = [aws_security_group.efs-sg.id]
 }
 
-resource "aws_efs_access_point" "aws_efs_access_point_pgadmin" {
-  file_system_id = aws_efs_file_system.aws_efs_file_system_pgadmin.id
+#given permisson to app with the path if avaible 
+resource "aws_efs_access_point" "aws_efs_access_point_app2" {
+  file_system_id = aws_efs_file_system.aws_efs_file_system_app2.id
   posix_user {
     gid = 1000
     uid = 1000
   }
   root_directory {
-    path = "/pgadmin"
+    path = "/app2"
     creation_info {
       owner_gid   = 1000
       owner_uid   = 1000
